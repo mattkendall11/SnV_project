@@ -237,7 +237,54 @@ class transitioncompute(QuantumHamiltonian):
         return np.abs(c)
     
     def get_field_amplitudes(self):
-        Ve1, Ve2, Ve3, Ve4 = 
+        '''
+
+        '''
+        Ve1, Ve2= self.Ve[:, 0], self.Ve[:, 1]
+        Vg1, Vg2  = self.Vg[:, 0], self.Vg[:, 1]
+
+        field_amps_ve1 = [self.return_field_amp(Vg, Ve1) for Vg in [Vg1, Vg2]]
+        field_amps_ve2 = [self.return_field_amp(Vg, Ve2) for Vg in [Vg1, Vg2]]
+
+        # Unpack results for Ve1
+        A1x, A1y, A1z = field_amps_ve1[0]
+        A2x, A2y, A2z = field_amps_ve1[1]
+
+
+        # Unpack results for Ve2
+        B1x, B1y, B1z = field_amps_ve2[0]
+        B2x, B2y, B2z = field_amps_ve2[1]
+
+
+        amps = [np.linalg.norm([A1x, A1y, A1z]), np.linalg.norm([A2x, A2y, A2z]),
+                np.linalg.norm([B1x, B1y, B1z]), np.linalg.norm([B2x, B2y, B2z])]
+
+        A1 = np.array([A1x, A1y, A1z])
+        A2 = np.array([A2x, A2y, A2z])
+        B1 = np.array([B1x, B1y, B1z])
+        B2 = np.array([B2x, B2y, B2z])
+
+        # Combine vectors into a single list for matrix calculation
+        vectors = [A1, A2, B1, B2]
+        labels = ["A1", "A2", "B1", "B2"]
+
+        # Calculate the dot product matrix
+        dot_product_matrix = np.zeros((len(vectors), len(vectors)))
+
+        for i in range(len(vectors)):
+            for j in range(len(vectors)):
+                dot_product_matrix[i, j] = np.vdot(vectors[i], vectors[j])
+
+        return amps, dot_product_matrix
+
+
+
+
+
+
+
+
+
 
 
 
