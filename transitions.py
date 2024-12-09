@@ -62,9 +62,9 @@ class transitioncompute(QuantumHamiltonian):
         Pz = np.kron(2 * np.array([[1, 0], [0, 1]]), np.identity(2))
 
         # Calculate field amplitudes
-        Ax = np.conj(vg) @ Px @ ve
-        Ay = np.conj(vg) @ Py @ ve
-        Az = np.conj(vg) @ Pz @ ve
+        Ax = np.conj(vg).T @ Px @ ve
+        Ay = np.conj(vg).T @ Py @ ve
+        Az = np.conj(vg).T @ Pz @ ve
 
         return Ax, Ay, Az
 
@@ -165,31 +165,6 @@ class transitioncompute(QuantumHamiltonian):
         Ax, Ay, Az = self.return_field_amp(self.Ve, self.Vg)
         return self.scan_polarisation(Ax, Ay, Az)
 
-    def plot_magnitude_polar(self,
-
-                             title: str = "Magnitude of Final Vector vs φ",
-                             save_path: Optional[str] = None) -> None:
-        """
-        Create polar plot of magnitude vs phi.
-
-        Args:
-
-            title (str): Plot title
-            save_path (Optional[str]): Path to save the plot
-        """
-        phi_values, magnitudes = self.get_magnitude_from_vector()
-        plt.figure(figsize=(10, 10))
-        ax = plt.subplot(111, projection='polar')
-        ax.plot(phi_values, magnitudes)
-        ax.set_title(title)
-        ax.grid(True)
-
-        if save_path:
-            plt.savefig(save_path)
-            self.logger.info(f"Polar plot saved to {save_path}")
-
-        plt.show()
-
     def get_c_magnitudes(self):
         """
         Calculate transition strength between excited and ground states.
@@ -259,10 +234,10 @@ class transitioncompute(QuantumHamiltonian):
         amps = [np.linalg.norm([A1x, A1y, A1z]), np.linalg.norm([A2x, A2y, A2z]),
                 np.linalg.norm([B1x, B1y, B1z]), np.linalg.norm([B2x, B2y, B2z])]
 
-        A1 = np.array([A1x, A1y, A1z])
-        A2 = np.array([A2x, A2y, A2z])
-        B1 = np.array([B1x, B1y, B1z])
-        B2 = np.array([B2x, B2y, B2z])
+        A1 = np.array([A1x, A1y, A1z])/amps[0]
+        A2 = np.array([A2x, A2y, A2z])/amps[1]
+        B1 = np.array([B1x, B1y, B1z])/amps[2]
+        B2 = np.array([B2x, B2y, B2z])/amps[3]
 
         # Combine vectors into a single list for matrix calculation
         vectors = [A1, A2, B1, B2]
@@ -273,10 +248,87 @@ class transitioncompute(QuantumHamiltonian):
 
         for i in range(len(vectors)):
             for j in range(len(vectors)):
-                dot_product_matrix[i, j] = np.vdot(vectors[i], vectors[j])
+                dot_product_matrix[i, j] = np.abs(np.vdot(vectors[i], vectors[j]))
+        real_amps = [np.abs(x) for x in amps]
+        return real_amps, dot_product_matrix
 
-        return amps, dot_product_matrix
+    def dipole_matrix(self):
+        '''
 
+        '''
+
+        Px = np.kron(np.array([[0, 1], [1, 0]]), np.identity(2))
+        Py = np.kron(np.array([[0, -1j], [1j, 0]]), np.identity(2))
+        Pz = np.kron(2 * np.array([[1, 0], [0, 1]]), np.identity(2))
+
+        Px_matrix = np.zeros((8,8))
+        Py_matrix = np.zeros((8, 8))
+        Pz_matrix = np.zeros((8, 8))
+
+        eigenstates = np.concatenate((self.Vg, self.Ve), axis=0)
+        norms = np.linalg.norm(eigenstates, axis=1, keepdims=True)
+        # Avoid division by zero
+        norms[norms == 0] = 1
+        # Divide each vector by its norm
+        normalized_eigenstates = eigenstates / norms
+
+        for i in range(8):
+            for j in range(8):
+                Px_matrix[i,j] = np.conj(normalized_eigenstates[i].T) @ Px @ normalized_eigenstates[j]
+                Py_matrix[i, j] = np.conj(normalized_eigenstates[i].T) @ Py @ normalized_eigenstates[j]
+                Pz_matrix[i, j] = np.conj(normalized_eigenstates[i].T) @ Pz @ normalized_eigenstates[j]
+
+        return [Px_matrix, Py_matrix, Pz_matrix]
+    def energy_matrix(self):
+        '''
+
+        '''
+        energies = np.concatenate((self.Eg, self.Ee), axis=0)
+        H0 = np.zeros((8,8))
+
+        for i in range(8):
+            H0[i,i] = energies[i]
+
+        return H0
+
+    def E_field(self):
+        """
+        Compute the quantized electric field components for a single cavity mode.
+
+        Parameters:
+            a (numpy.ndarray): Annihilation operator.
+            a_dagger (numpy.ndarray): Creation operator.
+            u_x (float): Spatial mode function in the x-direction.
+            u_y (float): Spatial mode function in the y-direction.
+            u_z (float): Spatial mode function in the z-direction.
+            omega (float): Angular frequency of the cavity mode (rad/s).
+            V (float): Effective mode volume (m^3).
+
+        Returns:
+            numpy.ndarray: Array containing the electric field components [E_x, E_y, E_z].
+        """
+        # Constants
+        hbar = 1.0545718e-34  # Reduced Planck's constant (J·s)
+        epsilon_0 = 8.854187817e-12  # Permittivity of free space (F/m)
+        u_x = 1.0
+        u_y = 0.0
+        u_z = 0.0
+        omega = 2 * np.pi * 5e14
+        V = 1e-6
+        # Prefactor for the electric field
+        prefactor = 1j * np.sqrt(hbar * omega / (2 * epsilon_0 * V))
+        a = np.array([[0, 1], [0, 0]])  # Annihilation operator
+        a_dagger = np.array([[0, 0], [1, 0]])
+        # Electric field components
+        E_x = prefactor * (a * u_x - a_dagger * u_x)
+        E_y = prefactor * (a * u_y - a_dagger * u_y)
+        E_z = prefactor * (a * u_z - a_dagger * u_z)
+
+        # Return as a vector
+        return np.array([E_x, E_y, E_z])
+
+    def hamiltonian(self):
+        return self.energy_matrix() - np.dot(self.dipole_matrix(), self.E_field())
 
 
 
