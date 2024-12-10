@@ -291,7 +291,7 @@ class transitioncompute(QuantumHamiltonian):
 
         return H0
 
-    def E_field(self):
+    def E_field(self, w, t):
         """
         Compute the quantized electric field components for a single cavity mode.
 
@@ -310,25 +310,27 @@ class transitioncompute(QuantumHamiltonian):
         # Constants
         hbar = 1.0545718e-34  # Reduced Planck's constant (J·s)
         epsilon_0 = 8.854187817e-12  # Permittivity of free space (F/m)
-        u_x = 1.0
-        u_y = 0.0
-        u_z = 0.0
-        omega = 2 * np.pi * 5e14
-        V = 1e-6
+
+        V = 0.8
         # Prefactor for the electric field
-        prefactor = 1j * np.sqrt(hbar * omega / (2 * epsilon_0 * V))
-        a = np.array([[0, 1], [0, 0]])  # Annihilation operator
-        a_dagger = np.array([[0, 0], [1, 0]])
+        prefactor = 1j * np.sqrt(hbar * w / (2 * epsilon_0 * V))
+        a = 5
+
         # Electric field components
-        E_x = prefactor * (a * u_x - a_dagger * u_x)
-        E_y = prefactor * (a * u_y - a_dagger * u_y)
-        E_z = prefactor * (a * u_z - a_dagger * u_z)
+        E_x = prefactor * (a *np.exp(1j*w*t) - a *np.exp(-1j*w*t))
+        E_y = prefactor * (a *np.exp(1j*w*t) - a *np.exp(-1j*w*t))
+        E_z = 0
 
         # Return as a vector
         return np.array([E_x, E_y, E_z])
 
-    def hamiltonian(self):
-        return self.energy_matrix() - np.dot(self.dipole_matrix(), self.E_field())
+    def td_hamiltonian(self,w,t):
+        '''
+
+        '''
+        muE = [matrix * factor for matrix, factor in zip(self.dipole_matrix(), self.E_field(w,t))]
+        muE = np.abs(muE[0]+muE[1]+muE[2])
+        return self.energy_matrix() - muE
 
 
 
