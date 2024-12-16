@@ -272,11 +272,16 @@ class transitioncompute(QuantumHamiltonian):
         # Divide each vector by its norm
         normalized_eigenstates = eigenstates / norms
 
-        for i in range(8):
-            for j in range(8):
+        for i in range(4):
+            for j in range(4,8):
                 Px_matrix[i,j] = np.conj(normalized_eigenstates[i].T) @ Px @ normalized_eigenstates[j]
+                Px_matrix[j,i] = np.conj(normalized_eigenstates[j].T) @ Px @ normalized_eigenstates[i]
+
                 Py_matrix[i, j] = np.conj(normalized_eigenstates[i].T) @ Py @ normalized_eigenstates[j]
+                Py_matrix[j, i] = np.conj(normalized_eigenstates[j].T) @ Py @ normalized_eigenstates[i]
+
                 Pz_matrix[i, j] = np.conj(normalized_eigenstates[i].T) @ Pz @ normalized_eigenstates[j]
+                Pz_matrix[j, i] = np.conj(normalized_eigenstates[j].T) @ Pz @ normalized_eigenstates[i]
 
         return [Px_matrix, Py_matrix, Pz_matrix]
     def energy_matrix(self):
@@ -296,11 +301,6 @@ class transitioncompute(QuantumHamiltonian):
         Compute the quantized electric field components for a single cavity mode.
 
         Parameters:
-            a (numpy.ndarray): Annihilation operator.
-            a_dagger (numpy.ndarray): Creation operator.
-            u_x (float): Spatial mode function in the x-direction.
-            u_y (float): Spatial mode function in the y-direction.
-            u_z (float): Spatial mode function in the z-direction.
             omega (float): Angular frequency of the cavity mode (rad/s).
             V (float): Effective mode volume (m^3).
 
@@ -319,7 +319,7 @@ class transitioncompute(QuantumHamiltonian):
         # Electric field components
         E_x = prefactor * (a *np.exp(1j*w*t) - a *np.exp(-1j*w*t))
         E_y = prefactor * (a *np.exp(1j*w*t) - a *np.exp(-1j*w*t))
-        E_z = 0
+        E_z = prefactor * (a *np.exp(1j*w*t) - a *np.exp(-1j*w*t))
 
         # Return as a vector
         return np.array([E_x, E_y, E_z])
@@ -331,6 +331,14 @@ class transitioncompute(QuantumHamiltonian):
         muE = [matrix * factor for matrix, factor in zip(self.dipole_matrix(), self.E_field(w,t))]
         muE = np.abs(muE[0]+muE[1]+muE[2])
         return self.energy_matrix() - muE
+
+    def get_A2(self):
+
+        Ve1 = self.Ve[:, 1]
+        Vg1 = self.Vg[:, 1]
+
+        A2x, A2y, A2z = self.return_field_amp(Vg1, Ve1)
+        return [A2x, A2y, A2z]
 
 
 

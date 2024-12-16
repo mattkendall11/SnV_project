@@ -5,7 +5,7 @@ from matplotlib.animation import FuncAnimation
 from transitions import transitioncompute
 
 # Initialize the model
-model = transitioncompute(B=[1, 1, 1])
+model = transitioncompute(B=[0.1, 0.1, 0])
 
 # Set up the figure and axis for the plot
 fig, ax = plt.subplots(figsize=(8, 6))
