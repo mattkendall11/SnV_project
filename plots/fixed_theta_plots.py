@@ -2,12 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from src.transitions import transitioncompute
-# Summary of Functions and Parameters:
-# Function:            Fixed Parameter   | X-Axis          | Y-Axis
-# ------------------------------------------------------------------
-# constant_azimuth:    Phi (φ)           | Theta (θ)       | Field Strength (B)
-# constant_polar:      Theta (θ)         | Phi (φ)         | Field Strength (B)
-# constant_field:      Field Strength (B)| Phi (φ)         | Theta (θ)
 
 # Load the data from the HDF5 file
 file_path = 'fixed_100_12-02_15-01.h5'

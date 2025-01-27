@@ -4,6 +4,7 @@ from src.transitions import transitioncompute
 import h5py
 file_path = 'fixed_100_12-02_15-01.h5'
 vary = False
+
 with h5py.File(file_path, 'r') as f:
     # Load parameter arrays
     B_values = f['B_values'][:]
@@ -49,6 +50,8 @@ def fixed_plot(phi_index, theta_fixed):
 
     # Show the plot
     plt.show()
+
+
 def plot_overlap_grid():
     labels = ["A1", "A2", "B1", "B2"]
     B,theta = 1, np.pi/4
@@ -78,6 +81,8 @@ def plot_overlap_grid():
     plt.tight_layout()
     plt.savefig('overlaps.svg')
     plt.show()
+
+
 def plot_amplitudes():
     labels = ["A1", "A2", "B1", "B2"]
     B, theta = 1, np.pi / 4

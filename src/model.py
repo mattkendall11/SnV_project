@@ -14,12 +14,12 @@ class PhysicalConstants:
     GHz: float = 1e9  # 1 GHz in Hz
     lg: float = 815e9  # Spin-orbit coupling in ground state (Hz)
     lu: float = 2355e9  # Spin-orbit coupling in excited state (Hz)
-    x_g: float = 65e9
+    x_g: float = 65e9 #Jahn teller coupling
     y_g: float = 0  # Jahn-Teller coupling (ground state) (Hz)
-    x_u: float = 855e9
+    x_u: float = 855e9 # Jahn-Teller coupling
     y_u: float = 0  # Jahn-Teller coupling (excited state) (Hz)
-    fg: float = 0.15
-    fu: float = 0.15
+    fg: float = 0.15 # quenching factor
+    fu: float = 0.15 # quenching factor
 
 
 class QuantumHamiltonian:
