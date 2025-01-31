@@ -135,8 +135,7 @@ class QuantumHamiltonian:
 
     def get_energy_spectra(self,
                            B: np.ndarray,
-                           strain: bool = False,
-                           strain_params: Optional[Tuple[float, float, float]] = None) -> Tuple[np.ndarray, np.ndarray]:
+                           strain: Tuple[float, float, float, float, float, float] = [0,0,00,0,0]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculate the energy eigenvalues and eigenvectors of the complete Hamiltonian.
 
@@ -146,17 +145,14 @@ class QuantumHamiltonian:
             y (float): Jahn-Teller y coupling strength
             f (float): Orbital quenching factor
             B (np.ndarray): Magnetic field vector [Bx, By, Bz]
-            strain (bool, optional): Include strain effects. Defaults to False.
-            strain_params (Tuple[float, float, float], optional):
-                Strain parameters (a, b, d). Defaults to (-238e9, 238e9, 0).
+            strain (np.ndarray): values of ground and excited state strain
 
         Returns:
             Eigenvalues and eigenvectors of the ground and excited Hamiltonian
         """
         # Default strain parameters
-        if strain and strain_params is None:
-            strain_params = (-238e9, 238e9, 0)
-
+        a, b, d = strain[0], strain[1], strain[2]
+        ae, be, de = strain[3], strain[4], strain[5]
         # Construct full Hamiltonian
         Hg = (self.spin_orbit_hamiltonian(self.constants.lg) +
              self.jahn_teller_hamiltonian(self.constants.x_g, self.constants.y_g) +
@@ -168,9 +164,9 @@ class QuantumHamiltonian:
              self.zeeman_hamiltonian(self.constants.fu, B[2]) +
              self.spin_zeeman_hamiltonian(B))
 
-        if strain:
-            Hg += self.strain_hamiltonian(*strain_params)
-            He += self.strain_hamiltonian(*strain_params)
+
+        Hg += self.strain_hamiltonian(a, b, d)
+        He += self.strain_hamiltonian(ae, be, de)
 
 
         # Find eigenvalues and eigenvectors

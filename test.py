@@ -125,10 +125,10 @@ def plot_ellipticity(Ex, Ey, num_points=500):
     plt.legend()
     plt.show()
 
-check_min()
-b = 1.82
+# check_min()
+b = 1
 theta = 1.3169328487746776
-#theta = np.pi/2
+# theta = np.pi/2
 phi = np.pi
 Bx = b * np.sin(theta) * np.cos(phi)
 By = b * np.sin(theta) * np.sin(phi)
@@ -151,21 +151,20 @@ c = np.vdot(v1, v2)
 # print('B1', v2)
 # print(fr'A2 B1 overlap {np.abs(c):.16f}')
 
-# result = compute_polarization(np.conj(v1))
 result = compute_polarization(v1)
 result2 = compute_polarization(v2)
-result3 = compute_polarization(v3)
-result4 = compute_polarization(v4)
+# result3 = compute_polarization(v3)
+# result4 = compute_polarization(v4)
 
 Ex, Ey = result['Ex'], result['Ey']
 Ex2, Ey2 = result2['Ex'], result2['Ey']
-Ex3, Ey3 = result3['Ex'], result3['Ey']
-Ex4, Ey4 = result4['Ex'], result4['Ey']
-
-print(fr'A1: ', fr'Ex :{Ex3:.3f} , Ey: {Ey3:.3f}')
+# Ex3, Ey3 = result3['Ex'], result3['Ey']
+# Ex4, Ey4 = result4['Ex'], result4['Ey']
+#
+# print(fr'A1: ', fr'Ex :{Ex3:.3f} , Ey: {Ey3:.3f}')
 print(fr'A2: ', fr'Ex :{Ex:.3f} , Ey: {Ey:.3f}')
 print(fr'B1: ', fr'Ex :{Ex2:.3f} , Ey: {Ey2:.3f}')
-print(fr'B2: ', fr'Ex :{Ex4:.3f} , Ey: {Ey4:.3f}')
+# print(fr'B2: ', fr'Ex :{Ex4:.3f} , Ey: {Ey4:.3f}')
 
 print(result['A_L'], result['A_R'])
 print(result2['A_L'], result2['A_R'])

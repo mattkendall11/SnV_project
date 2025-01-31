@@ -8,11 +8,12 @@ class transitioncompute(QuantumHamiltonian):
     Includes functionality for calculating transition energies, field amplitudes, and polarization analysis.
     """
 
-    def __init__(self, B):
+    def __init__(self, B, strain= [0,0,0,0,0,0]):
         """Initialize the QuantumTransitionAnalyzer."""
         super().__init__()
         self.B = B
-        self.Eg, self.Vg, self.Ee, self.Ve = QuantumHamiltonian.get_energy_spectra(self, B=self.B)
+        self.strain = strain
+        self.Eg, self.Vg, self.Ee, self.Ve = QuantumHamiltonian.get_energy_spectra(self, B=self.B, strain=self.strain)
         self.Px = np.kron(np.array([[0, 1], [1, 0]]), np.identity(2))
         self.Py = np.kron(np.array([[0, -1j], [1j, 0]]), np.identity(2))
         self.Pz = np.kron(2 * np.array([[1, 0], [0, 1]]), np.identity(2))
