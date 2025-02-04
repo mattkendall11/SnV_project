@@ -128,7 +128,7 @@ def plot_ellipticity(Ex, Ey, num_points=500):
 # check_min()
 b = 1
 theta = 1.3169328487746776
-# theta = np.pi/2
+#theta = np.pi/2
 phi = np.pi
 Bx = b * np.sin(theta) * np.cos(phi)
 By = b * np.sin(theta) * np.sin(phi)

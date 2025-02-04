@@ -3,7 +3,7 @@ from sim.strain import run_strain
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-ttype = 'A2B1'
+ttype = 'B1B2'
 resolution = 100
 # run_strain(resolution = resolution, ttype=ttype)
 

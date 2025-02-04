@@ -12,7 +12,7 @@ def run_strain(resolution = 200, ttype = 'A1A2'):
 
     ag = np.linspace(0, -238e9, resolution)
     ae = np.linspace(0, -76e9, resolution)
-    bg = np.linspace(0, 238, resolution)
+    bg = np.linspace(0, 238e9, resolution)
     be = 76e9
 
     ag_grid, ae_grid, bg_grid = np.meshgrid(ag, ae, bg)
@@ -62,7 +62,7 @@ def run_strain(resolution = 200, ttype = 'A1A2'):
 
     timestamp = datetime.datetime.now().strftime("%m-%d_%H")
     # Save data
-    with h5py.File(fr'data/{ttype}_{resolution}_{timestamp}.h5', 'w') as f:
+    with h5py.File(fr'data/{ttype}_{resolution}_strain.h5', 'w') as f:
         # Save parameter arrays
         f.create_dataset('ag', data=ag)
         f.create_dataset('ae', data=ae)
