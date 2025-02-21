@@ -10,24 +10,24 @@ def run_strain(resolution = 200, ttype = 'A1A2'):
         raise ValueError(f"Invalid ttype: '{ttype}'. Must be one of ['B1B2', 'A1A2', 'A1B2', 'A1B1', 'A2B1', 'A2B2'].")
 
 
-    ag = np.linspace(0, -238e9, resolution)
-    ae = np.linspace(0, -76e9, resolution)
-    bg = np.linspace(0, 238e9, resolution)
-    be = 76e9
+    exg = np.linspace(0, 10**-3, resolution)
+    exyg = np.linspace(0, 10**-3, resolution)
+    exe = np.linspace(0, 10**-3, resolution)
+    exye = 10**-4
 
-    ag_grid, ae_grid, bg_grid = np.meshgrid(ag, ae, bg)
+    ag_grid, ae_grid, bg_grid = np.meshgrid(exg, exe, exyg)
     c_magnitudes = np.zeros_like(ag_grid)
 
     # Preallocate arrays for energy spectra and eigenvectors
     energy_ground = np.zeros((len(ag_grid), len(ae_grid), len(bg_grid), 4))
-    energy_excited = np.zeros((len(ag_grid), len(ae_grid), len(bg), 4))
+    energy_excited = np.zeros((len(ag_grid), len(ae_grid), len(bg_grid), 4))
     eigenvectors_ground = np.zeros((len(ag_grid), len(ae_grid), len(bg_grid), 4, 4), dtype=complex)
     eigenvectors_excited = np.zeros((len(ag_grid), len(ae_grid), len(bg_grid), 4, 4), dtype=complex)
 
     # Calculate |c| for each combination of B, theta and phi
-    for i in tqdm(range(len(ag))):
-        for j in range(len(ae)):
-            for k in range(len(bg)):
+    for i in tqdm(range(len(exg))):
+        for j in range(len(exyg)):
+            for k in range(len(exe)):
                 theta = 1.82
                 phi = np.pi/2
                 b = 1
@@ -38,7 +38,7 @@ def run_strain(resolution = 200, ttype = 'A1A2'):
                 B = [Bx, By, Bz]
                 a1,a2,b1 = ag_grid[i,j,k], ae_grid[i,j,k], bg_grid[i,j,k]
 
-                model = transitioncompute(B, strain=[a1, b1, 0, a2, be, 0])
+                model = transitioncompute(B, strain=[a1, a2, b1, exye])
 
                 # Store energy levels and eigenvectors
                 energy_ground[i, j, k, :], energy_excited[i, j, k, :] = model.return_levels()
@@ -64,9 +64,9 @@ def run_strain(resolution = 200, ttype = 'A1A2'):
     # Save data
     with h5py.File(fr'data/{ttype}_{resolution}_strain.h5', 'w') as f:
         # Save parameter arrays
-        f.create_dataset('ag', data=ag)
-        f.create_dataset('ae', data=ae)
-        f.create_dataset('bg', data=bg)
+        f.create_dataset('exg', data=exg)
+        f.create_dataset('exyg', data=exyg)
+        f.create_dataset('exe', data=exe)
 
         # Save c magnitudes
         f.create_dataset('c_magnitudes', data=c_magnitudes)
@@ -81,6 +81,5 @@ def run_strain(resolution = 200, ttype = 'A1A2'):
         grp_excited.create_dataset('eigenvectors', data=eigenvectors_excited)
 
 
-def run_phi_ae():
-    ae = np.linspace(0, -76e9, resolution)
+
 

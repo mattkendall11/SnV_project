@@ -116,7 +116,7 @@ class QuantumHamiltonian:
                                   [0, 0, Bx + 1j * By, -Bz]])
 
     @staticmethod
-    def strain_hamiltonian(a: float, b: float, d: float) -> np.ndarray:
+    def strain_hamiltonian(ex: float, exy: float, d: float) -> np.ndarray:
         """
         Calculate the strain Hamiltonian matrix.
 
@@ -128,14 +128,14 @@ class QuantumHamiltonian:
         Returns:
             np.ndarray: 4x4 strain Hamiltonian matrix
         """
-        return np.array([[a - d, 0, b, 0],
-                         [0, a - d, 0, b],
-                         [b, 0, -a - d, 0],
-                         [0, b, 0, -a - d]])
+        return np.array([[d*ex, 0, 2*d*exy, 0],
+                         [0, d*ex, 0, 2*d*exy],
+                         [2*d*exy, 0, -d*ex, 0],
+                         [0, 2*d*exy, 0, -d*ex]])
 
     def get_energy_spectra(self,
                            B: np.ndarray,
-                           strain: Tuple[float, float, float, float, float, float] = [0,0,00,0,0]) -> Tuple[np.ndarray, np.ndarray]:
+                           strain: Tuple[float, float] = [0,0]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculate the energy eigenvalues and eigenvectors of the complete Hamiltonian.
 
@@ -151,8 +151,8 @@ class QuantumHamiltonian:
             Eigenvalues and eigenvectors of the ground and excited Hamiltonian
         """
         # Default strain parameters
-        a, b, d = strain[0], strain[1], strain[2]
-        ae, be, de = strain[3], strain[4], strain[5]
+        ex, exy = strain[0], strain[1]
+
         # Construct full Hamiltonian
         Hg = (self.spin_orbit_hamiltonian(self.constants.lg) +
              self.jahn_teller_hamiltonian(self.constants.x_g, self.constants.y_g) +
@@ -165,8 +165,8 @@ class QuantumHamiltonian:
              self.spin_zeeman_hamiltonian(B))
 
 
-        Hg += self.strain_hamiltonian(a, b, d)
-        He += self.strain_hamiltonian(ae, be, de)
+        Hg += self.strain_hamiltonian(ex, exy, 0.787e15)
+        He += self.strain_hamiltonian(ex, exy, 0.956e15)
 
 
         # Find eigenvalues and eigenvectors
@@ -174,6 +174,4 @@ class QuantumHamiltonian:
         eigenvalues_excited, eigenvectors_excited = eigh(He)
         return eigenvalues_ground, eigenvectors_ground, eigenvalues_excited, eigenvectors_excited
 
-
-
-
+# print(2*PhysicalConstants.muB/PhysicalConstants.hbar)

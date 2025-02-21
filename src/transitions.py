@@ -9,14 +9,29 @@ class transitioncompute(QuantumHamiltonian):
     """
 
     def __init__(self, B, strain= [0,0,0,0,0,0]):
-        """Initialize the QuantumTransitionAnalyzer."""
+        """
+        Initialize the model
+
+        """
         super().__init__()
         self.B = B
         self.strain = strain
         self.Eg, self.Vg, self.Ee, self.Ve = QuantumHamiltonian.get_energy_spectra(self, B=self.B, strain=self.strain)
-        self.Px = np.kron(np.array([[0, 1], [1, 0]]), np.identity(2))
-        self.Py = np.kron(np.array([[0, -1j], [1j, 0]]), np.identity(2))
-        self.Pz = np.kron(2 * np.array([[1, 0], [0, 1]]), np.identity(2))
+        #self.Px = np.kron(np.array([[0, 1], [1, 0]]), np.identity(2))
+        self.Px = np.array([[0,0,1,0],
+                            [0,0,0,-1],
+                            [1,0,0,0],
+                            [0,-1,0,0]])
+        # self.Py = np.kron(np.array([[0, -1j], [1j, 0]]), np.identity(2))
+        self.Py = np.array([[0,0,0,-1],
+                            [0,0,-1,0],
+                            [0,-1,0,0],
+                            [-1,0,0,0]])
+        # self.Pz = np.kron(2 * np.array([[1, 0], [0, 1]]), np.identity(2))
+        self.Pz = 2*np.array([[0,0,1,0],
+                             [0,0,0,1],
+                             [1,0,0,0],
+                             [0,1,0,0]])
 
 
     def return_transitions(self):
@@ -65,7 +80,7 @@ class transitioncompute(QuantumHamiltonian):
 
         return Ax, Ay, Az
 
-    def convert_lab_frame(self,
+    def convert_lab_frame(self,Ax,Ay,Az,
                           theta: float = 54.7 * np.pi / 180,
                           phi: float = 0) -> Tuple[complex, complex]:
         """
@@ -82,7 +97,7 @@ class transitioncompute(QuantumHamiltonian):
             Tuple[complex, complex]: Transformed coordinates (Ax_lab, Ay_lab)
         """
 
-        Ax, Ay, Az = self.get_A1()
+
         M1 = np.array([[1, 0, 0],
                        [0, 1, 0]])
 
@@ -114,7 +129,7 @@ class transitioncompute(QuantumHamiltonian):
         Returns:
             Tuple[complex, complex]: Final field components (Ax_final, Ay_final)
         """
-        Ax_l, Ay_l =self.convert_lab_frame()
+        # Ax_l, Ay_l =self.convert_lab_frame()
         M1 = np.array([[1, 0],
                        [0, 0]])
         M2 = np.array([[np.cos(phi), np.sin(phi)],
@@ -124,7 +139,7 @@ class transitioncompute(QuantumHamiltonian):
         result = M1 @ M2 @ A_l
         return result[0], result[1]
 
-    def scan_polarisation(self,
+    def scan_polarisation(self,v,
                           n_points: int = 360) -> Tuple[np.ndarray, np.ndarray]:
         """
         Scan polarization by varying phi angle.
@@ -136,7 +151,8 @@ class transitioncompute(QuantumHamiltonian):
             Tuple[np.ndarray, np.ndarray]: Phi values and corresponding magnitudes
 
         """
-        Ax, Ay, Az = self.get_A1()
+        # Ax, Ay, Az = self.get_A1()
+        Ax, Ay, Az = v[0], v[1], v[2]
         phi_values = np.linspace(0, 2 * np.pi, n_points)
         magnitudes = []
 

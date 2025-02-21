@@ -3,14 +3,17 @@ from src.transitions import transitioncompute
 import matplotlib.pyplot as plt
 from fractions import Fraction
 from scipy.optimize import minimize
+from tqdm.auto import tqdm
+from utils.lalg import rotation_matrix_between_vectors
+from plots.polarization_plots import plot_polar, plot_2polar
 
 def check_min():
-    x = np.linspace(1.3169328487746, 1.3169328487747, 100000)
+    x = np.linspace(1, np.pi-0.05, 10000)
     y = []
     for theta in x:
 
-        b = 1.82
-        phi = np.pi
+        b = 5
+        phi = np.pi/4
         Bx = b*np.sin(theta) * np.cos(phi)
         By = b*np.sin(theta) * np.sin(phi)
         Bz = b*np.cos(theta)
@@ -22,17 +25,50 @@ def check_min():
 
         v1 = model.get_A2() / np.linalg.norm(model.get_A2())
 
-        v2 = model.get_B1() / np.linalg.norm(model.get_B1())
+        v2 = model.get_A2() / np.linalg.norm(model.get_A2())
+        Ax2, Ay2 = model.convert_lab_frame(*v1)
 
-        c = np.vdot(v1, v2)
+        Ax, Ay = model.convert_lab_frame(*v2)
+        c = np.abs(np.vdot([Ax2, Ay2], [Ax, Ay]))
+
         y.append(np.abs(c))
     factor = x[np.argmin(y)]
-    decimal = factor/np.pi
-    fraction = Fraction(decimal).limit_denominator()
-    print(fraction)
-    print(factor, np.min(y))
+    print(factor, min(y))
     plt.plot(x,y)
     plt.show()
+
+
+def scan_B_strength():
+    b_vals = np.linspace(0.01,5,100)
+    factors = []
+    for b in tqdm(b_vals):
+        x = np.linspace(1, 1.5, 10000)
+        y = []
+        for theta in x:
+
+            phi = np.pi
+            Bx = b*np.sin(theta) * np.cos(phi)
+            By = b*np.sin(theta) * np.sin(phi)
+            Bz = b*np.cos(theta)
+            B = [Bx,By,Bz]
+
+            model = transitioncompute(B)
+
+
+
+            v1 = model.get_A2() / np.linalg.norm(model.get_A2())
+
+            v2 = model.get_B1() / np.linalg.norm(model.get_B1())
+
+            c = np.vdot(v1, v2)
+            y.append(np.abs(c))
+        factor = x[np.argmin(y)]
+        factors.append(factor)
+    plt.plot(b_vals, factors)
+    plt.xlabel('B field strength')
+    plt.ylabel('location of minima (theta)')
+    plt.show()
+
 
 def compute_polarization(field_vector):
     """
@@ -54,7 +90,6 @@ def compute_polarization(field_vector):
 
     k_norm = np.linalg.norm(k_vector)
     k_vector /= k_norm
-    print(k_vector)
     # Define two orthogonal basis vectors perpendicular to k_vector
     basis_1 = np.cross(k_vector, [1, 0, 0]) if abs(k_vector[0]) < 1 else np.cross(k_vector, [0, 1, 0])
     basis_1 /= np.linalg.norm(basis_1)
@@ -83,12 +118,12 @@ def compute_polarization(field_vector):
         "Ex": A1,  # Electric field component in the first basis
         "Ey": A2,  # Electric field component in the second basis
         "k_vector": k_vector,  # Normalized propagation direction
-        "A1": A1,
-        "A2": A2,
         "A_L": A_L,
         "A_R": A_R,
         "Normalized Field": E_normalized,
-        "Stokes Parameters": stokes_parameters
+        "Stokes Parameters": stokes_parameters,
+        'basis 1': basis_1,
+        'basis 2': basis_2
     }
 
 def plot_ellipticity(Ex, Ey, num_points=500):
@@ -125,48 +160,90 @@ def plot_ellipticity(Ex, Ey, num_points=500):
     plt.legend()
     plt.show()
 
-# check_min()
-b = 1
-theta = 1.3169328487746776
-#theta = np.pi/2
-phi = np.pi
+def find_min_index(matrix):
+
+    min_value = float('inf')
+    min_index = [-1, -1]
+
+    for i, row in enumerate(matrix):
+        for j, val in enumerate(row):
+            if val < min_value:
+                min_value = val
+                min_index = [i, j]
+
+    return min_index[0], min_index[1]
+def make_matrix():
+    res = 400
+    hm = np.zeros((res,res))
+
+    b_vals = np.linspace(0.001,3,res)
+    theta_vals = np.linspace(0.0001,np.pi-0.001,res)
+    for i in tqdm(range(res)):
+        for j in range(res):
+            b = b_vals[i]
+            theta = theta_vals[j]
+            phi = np.pi
+            Bx = b * np.sin(theta) * np.cos(phi)
+            By = b * np.sin(theta) * np.sin(phi)
+            Bz = b * np.cos(theta)
+            B = [Bx, By, Bz]
+
+            model = transitioncompute(B, strain=[0,0,0,0])
+
+            v1 = model.get_A2()/ np.linalg.norm(model.get_A2())
+            Ax2, Ay2 = model.convert_lab_frame(*v1)
+
+
+            v2 = model.get_B1()/np.linalg.norm(model.get_B1())
+
+            Ax, Ay = model.convert_lab_frame(*v2)
+
+            hm[i,j] = np.abs(np.vdot([Ax2, Ay2], [Ax, Ay]))
+    print('finding min')
+    k,l = find_min_index(hm)
+    print(hm[k,l])
+    bp, tp = b_vals[k], theta_vals[l]
+    plt.figure(figsize=(8, 8))
+    plt.imshow(hm, cmap='viridis', aspect='auto', extent=[theta_vals.min(), theta_vals.max(), b_vals.min(), b_vals.max(),], origin='lower')
+    plt.colorbar(label="Value")
+    plt.title("overlap in lab frame")
+    plt.ylabel('B field strength')
+    plt.xlabel('theta')
+    plt.show()
+
+
+b= 0.5
+theta= 1.570796
+phi= 0
+exg= 0.0007656
+exyg= 0
+
 Bx = b * np.sin(theta) * np.cos(phi)
 By = b * np.sin(theta) * np.sin(phi)
 Bz = b * np.cos(theta)
 B = [Bx, By, Bz]
 
-model = transitioncompute(B)
-ee, eg = model.return_levels()
 
-v1 = model.get_A2() / np.linalg.norm(model.get_A2())
+model = transitioncompute(B, strain=[exg, exyg])
 
-v2 = model.get_B1() / np.linalg.norm(model.get_B1())
+v1 = model.get_A1()/ np.linalg.norm(model.get_A1())
+Ax2, Ay2 = model.convert_lab_frame(*v1)
 
-v3 = model.get_A1() / np.linalg.norm(model.get_A1())
 
-v4 = model.get_B2() / np.linalg.norm(model.get_B2())
+v2 = model.get_A2()/np.linalg.norm(model.get_A2())
+Ax, Ay = model.convert_lab_frame(*v2)
 
-c = np.vdot(v1, v2)
-# print(fr'A2 :', v1)
-# print('B1', v2)
-# print(fr'A2 B1 overlap {np.abs(c):.16f}')
+print(np.abs(np.vdot(v1, v2)))
+print(np.abs(np.vdot([Ax2, Ay2], [Ax, Ay])))
 
-result = compute_polarization(v1)
-result2 = compute_polarization(v2)
-# result3 = compute_polarization(v3)
-# result4 = compute_polarization(v4)
+phi_vals, mags = model.scan_polarisation(v1)
+phi_vals2, mags2 = model.scan_polarisation(v2)
+labels = ['A1', 'A2']
+plot_2polar(phi_vals, mags, phi_vals2, mags2, labels)
 
-Ex, Ey = result['Ex'], result['Ey']
-Ex2, Ey2 = result2['Ex'], result2['Ey']
-# Ex3, Ey3 = result3['Ex'], result3['Ey']
-# Ex4, Ey4 = result4['Ex'], result4['Ey']
-#
-# print(fr'A1: ', fr'Ex :{Ex3:.3f} , Ey: {Ey3:.3f}')
-print(fr'A2: ', fr'Ex :{Ex:.3f} , Ey: {Ey:.3f}')
-print(fr'B1: ', fr'Ex :{Ex2:.3f} , Ey: {Ey2:.3f}')
-# print(fr'B2: ', fr'Ex :{Ex4:.3f} , Ey: {Ey4:.3f}')
 
-print(result['A_L'], result['A_R'])
-print(result2['A_L'], result2['A_R'])
-plot_ellipticity(Ex2, Ey2)
-plot_ellipticity(Ex, Ey)
+plot_ellipticity(Ax, Ay)
+plot_ellipticity(Ax2, Ay2)
+
+
+print(Ax2,Ay2)
