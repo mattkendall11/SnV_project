@@ -159,7 +159,7 @@ class QuantumHamiltonian:
              self.zeeman_hamiltonian(self.constants.fg, B[2]) +
              self.spin_zeeman_hamiltonian(B))
 
-        He = (self.spin_orbit_hamiltonian(self.constants.lu) +
+        He = (self.unpeterbed_hamiltonian()+self.spin_orbit_hamiltonian(self.constants.lu) +
              self.jahn_teller_hamiltonian(self.constants.x_u, self.constants.y_u) +
              self.zeeman_hamiltonian(self.constants.fu, B[2]) +
              self.spin_zeeman_hamiltonian(B))
@@ -168,10 +168,9 @@ class QuantumHamiltonian:
         Hg += self.strain_hamiltonian(ex, exy, 0.787e15)
         He += self.strain_hamiltonian(ex, exy, 0.956e15)
 
+        H = np.block([[He, np.zeros((4,4))],
+                     [np.zeros((4,4)), Hg]])
 
-        # Find eigenvalues and eigenvectors
-        eigenvalues_ground, eigenvectors_ground = eigh(Hg)
-        eigenvalues_excited, eigenvectors_excited = eigh(He)
-        return eigenvalues_ground, eigenvectors_ground, eigenvalues_excited, eigenvectors_excited
+        eigenvalues, eigenvectors = eigh(H)
+        return eigenvalues, eigenvectors
 
-# print(2*PhysicalConstants.muB/PhysicalConstants.hbar)

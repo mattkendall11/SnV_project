@@ -17,9 +17,6 @@ for i in range(len(Bx)):
         cx[i,j], cy[i,j], cz[i,j] = normalized_vector
 
 
-
-
-
 X, Y = np.meshgrid(Bx, By)
 
 # Plot the heatmap
