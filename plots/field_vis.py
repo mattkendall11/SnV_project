@@ -1,91 +1,60 @@
+from src.transitions import transitioncompute
 import numpy as np
+from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from utils.analytic import approx_B
+from utils.iqp_colors import uni
 
-# Functions to compute alpha, beta, k, and m
-def compute_alpha(Gamma_x, Gamma_S, B, lambd):
-    return np.sqrt((Gamma_x + Gamma_S * B)**2 + lambd**2)
+# Resolution
+res = 100  # Reduce for faster computation
 
-def compute_beta(Gamma_x, Gamma_S, B, lambd):
-    return np.sqrt((Gamma_x - Gamma_S * B)**2 + lambd**2)
+# Define parameter ranges
+b_vals = np.linspace(0.001, 3, res)
+theta_vals = np.linspace(0.0001, np.pi - 0.0001, res)
+strain_vals = np.linspace(0.0001, 1e-3, res)
 
-def compute_k(alpha, Gamma_x, Gamma_S, B, lambd):
-    return (alpha - Gamma_x - Gamma_S * B) / lambd
+# Initialize 3D matrix to store minima values
+cmat = np.zeros((res, res, res))
 
-def compute_m(beta, Gamma_S, B, Gamma_x, lambd):
-    return (beta + Gamma_S * B - Gamma_x) / lambd
+# Compute overlap values
+for i in tqdm(range(res)):
+    for j in range(res):
+        for k in range(res):
+            p = 0
+            b = b_vals[i]
+            t = theta_vals[j]
 
-def compute_k_prime(alpha, Gamma_x, Gamma_S, B, lambd):
-    return (alpha + Gamma_x + Gamma_S * B) / lambd
+            Bx = b * np.sin(t) * np.cos(p)
+            By = b * np.sin(t) * np.sin(p)
+            Bz = b * np.cos(t)
+            B = [Bx, By, Bz]
 
-def compute_m_prime(beta, Gamma_S, B, Gamma_x, lambd):
-    return (beta - Gamma_S * B + Gamma_x) / lambd
+            exg = strain_vals[k]
+            exyg = 0
+            model = transitioncompute(B, strain=[exg, exyg])
+            v1 = model.get_A2() / np.linalg.norm(model.get_A2())
+            Ax2, Ay2 = model.convert_lab_frame(*v1)
 
-# Define physical parameters
-muB = 9.2740100783e-24  # Bohr magneton in J/T
-hbar = 1.054571817e-34  # Reduced Planck constant
-lg = 815e9  # Spin-orbit coupling in ground state (Hz)
-lu = 2355e9  # Spin-orbit coupling in excited state (Hz)
-xg = 65e9  # Ground Jahn-Teller coupling (Hz)
-xu = 855e9  # Excited Jahn-Teller coupling (Hz)
-S = 2 * muB / hbar  # Spin factor
-B = 1  # Magnetic field (T)
+            v2 = model.get_B1() / np.linalg.norm(model.get_B1())
+            Ax, Ay = model.convert_lab_frame(*v2)
 
-# Compute alpha and beta for ground and excited states
-alpha_g = compute_alpha(xg, S, B, lg)
-alpha_e = compute_alpha(xu, S, B, lu)
-beta_g = compute_beta(xg, S, B, lg)
-beta_e = compute_beta(xu, S, B, lu)
+            c = np.abs(np.vdot([Ax2, Ay2], [Ax, Ay]))
+            cmat[i, j, k] = c
 
-# Compute k, k', m, m' for ground and excited states
-kg, kdg, mg, mdg = (compute_k(alpha_g, xg, S, B, lg), compute_k_prime(alpha_g, xg, S, B, lg),
-                    compute_m(beta_g, xg, S, B, lg), compute_m_prime(beta_g, xg, S, B, lg))
-ke, kde, me, mde = (compute_k(alpha_e, xu, S, B, lu), compute_k_prime(alpha_e, xu, S, B, lu),
-                    compute_m(beta_e, xu, S, B, lu), compute_m_prime(beta_e, xu, S, B, lu))
+# Extract minima surface
+min_indices = np.argmin(cmat, axis=2)
+B_surface, Theta_surface = np.meshgrid(b_vals, theta_vals)
+Strain_surface = strain_vals[min_indices]
 
+# Plot 3D surface
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(B_surface, Theta_surface, Strain_surface, cmap=uni, edgecolor='none')
 
+ax.set_xlabel("B (T)")
+ax.set_ylabel("Theta (rad)")
+ax.set_zlabel("Strain")
+ax.set_title("Minima Surface of \langle A2 | B1 \rangle")
 
-def plot_elipticity(Ex, Ey):
-    # Compute Stokes parameters
-    S0 = np.abs(Ex)**2 + np.abs(Ey)**2  # Total intensity
-    S1 = np.abs(Ex)**2 - np.abs(Ey)**2  # Difference in intensities
-    S2 = 2 * np.real(Ex * np.conj(Ey))
-    S3 = -2 * np.imag(Ex * np.conj(Ey))  # Circular polarizationli
-
-    # Ellipticity angle (chi) and orientation angle (psi)
-    chi = 0.5 * np.arcsin(S3 / S0)  # Ellipticity angle
-    psi = 0.5 * np.arctan(S2/ S1)  # Orientation angle
-
-
-    # Generate the polarization ellipse
-    theta = np.linspace(0, 2 * np.pi, 500)  # Parameter for the ellipse
-    a = np.sqrt(S0)  # Semi-major axis
-    b = a * np.sin(chi)  # Semi-minor axis
-    x_ellipse = a * np.cos(theta) * np.cos(psi) - b * np.sin(theta) * np.sin(psi)
-    y_ellipse = a * np.cos(theta) * np.sin(psi) + b * np.sin(theta) * np.cos(psi)
-
-    # Plot the polarization ellipse
-    plt.figure(figsize=(8, 8))
-    plt.plot(x_ellipse, y_ellipse, label="Polarization Ellipse", color="blue")
-    plt.xlabel("Ex (Electric Field X-component)")
-    plt.ylabel("Ey (Electric Field Y-component)")
-    plt.axhline(0, color='black', linewidth=0.5, linestyle='--')
-    plt.axvline(0, color='black', linewidth=0.5, linestyle='--')
-    plt.title(fr"Polarization Ellipse with Orientation (ψ):{psi:.2f} and Ellipticity (χ):{chi:.2f}")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.axis('equal')
-    plt.savefig('polarisation.svg')
-    plt.show()
-
-def plotA1B2():
-    Ex = 2j * (mg - ke)  # x-component (complex)
-    Ey = 2 * (ke + mg)   # y-component (complex)
-    plot_elipticity(Ex, Ey)
-    Ex = 2j * (kg - me)  # x-component (complex)
-    Ey = 2 * (kg + me)  # y-component (complex)
-    plot_elipticity(Ex, Ey)
-    ex = 2*ke+2*mg
-    ey = 2j*(-ke+mg)
-    plot_elipticity(ex, ey)
-
-plotA1B2()
+plt.show()

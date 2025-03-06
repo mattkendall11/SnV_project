@@ -182,8 +182,8 @@ class transitioncompute(QuantumHamiltonian):
         '''
         returns A1 transition vector
         '''
-        Ve0 = self.V[:, 0]
-        Vg0 = self.V[:, 4]
+        Ve0 = self.V[:, 4]
+        Vg0 = self.V[:, 0]
 
         A1x, A1y, A1z = self.return_field_amp(Vg0, Ve0)
 

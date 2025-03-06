@@ -42,6 +42,21 @@ def f_nostrain(b,theta,phi):
 
     return np.abs(np.vdot([Ax2, Ay2], [Ax, Ay]))
 
+def f_ellptical(b,theta, phi, ex, exy):
+    Bx = b * np.sin(theta) * np.cos(phi)
+    By = b * np.sin(theta) * np.sin(phi)
+    Bz = b * np.cos(theta)
+    B = [Bx, By, Bz]
+
+    model = transitioncompute(B, strain=[ex, exy])
+
+    v1 = model.get_A2() / np.linalg.norm(model.get_A2())
+    Ax2, Ay2 = model.convert_lab_frame(*v1)
+    c1 = 0.5 - Ax2
+    c2 = 0.5j -Ay2
+    return np.abs(c1)+np.abs(c2)
+
+
 def optimize_da(f):
     bounds = [
         (0.001, 1),  # Magnetic field strength
@@ -51,7 +66,7 @@ def optimize_da(f):
         (0, 1e-3)
     ]
 
-    wrapped_f = lambda x: f(*x)
+    wrapped_f = lambda x: f_ellptical(*x)
     result = dual_annealing(wrapped_f, bounds, maxiter=10000)
     return result
 
@@ -61,7 +76,7 @@ def optimize_da_ns(f):
     result = dual_annealing(wrapped_f, bounds, maxiter=10000)
     return result
 
-result = optimize_da_ns(f)
+result = optimize_da(f)
 print(result)
 # if __name__ == "__main__":
 #     optimize_function(f)
