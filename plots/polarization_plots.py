@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import math
 from matplotlib.animation import FuncAnimation
-
+from utils.iqp_colors import light, dark
 
 # Define a function to plot the Poincaré sphere and mark a given vector
 def plot_poincare_sphere(vector, ax):
@@ -148,8 +148,8 @@ def plot_polar(phi_vals, mags):
 
 def plot_2polar(phi_vals, mags, phi_vals2, mags2, labels):
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-    ax.plot(phi_vals, mags, 'r', label =labels[0])  # 'ro' for red dots
-    ax.plot(phi_vals2, mags2, 'b', label=labels[1])
+    ax.plot(phi_vals, mags, color = dark[0], label =labels[0])  # 'ro' for red dots
+    ax.plot(phi_vals2, mags2, color = dark[1], label=labels[1])
     # Customize labels
     ax.set_theta_zero_location('E')  # Set zero degrees to the right (east)
     ax.set_theta_direction(-1)  # Counterclockwise

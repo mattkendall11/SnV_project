@@ -44,17 +44,17 @@ b_vals_approx = []
 for strain in strain_vals:
     q = approx_B(strain)
     b_vals_approx.append(q)
-
+np.save('data.npy', cmat)
 plt.figure(figsize=(7, 5))
 plt.imshow(cmat, cmap=uni, aspect='auto', extent=[strain_vals.min(), strain_vals.max(), theta_vals.min(), theta_vals.max(),], origin='lower')
 cbar = plt.colorbar(label=r" $\langle A2|B1\rangle$")
-cbar.ax.tick_params(labelsize='x-large')
-custom_ticks = [1e-4, 0.5e-3, 1e-3]  # Adjust as needed
-custom_labels = [r'$10^{-4}$', r'$5\times10^{-4}$', r'$10^{-3}$']
-
-ax = plt.gca()  # Get current axis
-ax.set_xticks(custom_ticks)  # Set specific tick positions
-ax.set_xticklabels(custom_labels, fontsize='large')
+# cbar.ax.tick_params(labelsize='x-large')
+# custom_ticks = [1e-4, 0.5e-3, 1e-3]  # Adjust as needed
+# custom_labels = [r'$10^{-4}$', r'$5\times10^{-4}$', r'$10^{-3}$']
+#
+# ax = plt.gca()  # Get current axis
+# ax.set_xticks(custom_ticks)  # Set specific tick positions
+# ax.set_xticklabels(custom_labels, fontsize='large')
 # plt.title(r" $\langle A1|A2\rangle, \theta = \pi/2, \Phi = 0$ ", size = 'xx-large')
 plt.ylabel(fr'$\theta$', size = 'xx-large')
 plt.xlabel(fr'Strain', size = 'x-large')
