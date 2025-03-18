@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
-from IPython.core.pylabtools import figsize
-
+from matplotlib.gridspec import GridSpec
 from src.transitions import transitioncompute
 import numpy as np
-import string
-from polarization_plots import plot_2polar, plot_polar
-from utils.lalg import plot_ellipticity
+from polarization_plots import stokes_s3_and_ellipticity
 from utils.iqp_colors import uni, light, dark
+
+
 p = 5.902
 b = 1.052e-01
 t = 2.092
@@ -20,25 +19,13 @@ B = [Bx, By, Bz]
 model = transitioncompute(B, strain=[Ex,0])
 
 strain_vals = np.linspace(0, 1e-3, 500)
-def stokes_s3_and_ellipticity(Ex, Ey):
-    """
-    Compute the Stokes S3 parameter and the degree of ellipticity.
 
-    Parameters:
-    Ex (complex): x-component of the electric field.
-    Ey (complex): y-component of the electric field.
 
-    Returns:
-    S3 (float): Stokes parameter S3.
-    ellipticity (float): Degree of ellipticity (radians).
-    """
-    S3 = 2 * np.imag(Ex * np.conj(Ey)) / (np.abs(Ex) ** 2 + np.abs(Ey) ** 2)
-    ellipticity = 0.5 * np.arcsin(S3)  # Ellipticity angle in radians
-    return S3, ellipticity
 elip_valsA2 = []
 elip_valsB1 = []
 stoke_valsA2 = []
 stoke_valsB1 = []
+
 for Exi in strain_vals:
     model = transitioncompute(B, strain=[Exi, 0])
     A2 = model.get_A2()
@@ -77,91 +64,8 @@ theta_vals = np.linspace(1e-9, np.pi-0.0001,res)
 strain_vals = np.linspace(0, 1e-3, res)
 plt.plot(theta_vals, strain_vals, color = dark[0])
 
-# fig = plt.figure(figsize=(6, 4))
-#
-# # Create subplots
-# ax = fig.add_subplot(2, 2, 1, projection='polar')  # Polar plot (top-left)
-# ax2 = fig.add_subplot(2, 2, 2)  # Color plot (top-right)
-# ax3 = fig.add_subplot(2, 2, 3)  # Elliptical plot (bottom-left)
-# ax4 = fig.add_subplot(2, 2, 4)  # Empty plot (bottom-right)
-#
-#
-# # Hide axes of the polar plot
-# # ax.set_xticklabels([])  # Hide angular labels
-# ax.set_yticklabels([])  # Hide radial labels
-# # ax.set_xticks([])  # Remove angular ticks
-# ax.set_yticks([])  # Remove radial ticks
-# ax.spines['polar'].set_visible(False)  # Remove polar frame
-# for spine in ax3.spines.values():
-#     spine.set_visible(False)
-# for spine in ax4.spines.values():
-#     spine.set_visible(False)
-# # Polar plot (top-left)
-# ax.plot(A2ang, A2mag, color=dark[0], label='A2')
-# ax.plot(B1ang, B1mag, color=dark[1], label='B1')
-#
-# # Color plot (top-right)
-# im = ax2.imshow(cmat, cmap=uni, aspect='auto',
-#                extent=[strain_vals.min(), strain_vals.max(),
-#                        theta_vals.min(), theta_vals.max()],
-#                origin='lower')
-#
-# # Add colorbar correctly to ax2
-# cbar = fig.colorbar(im, ax=ax2, label=r"$\langle A2|B1\rangle$")
-# cbar.ax.tick_params(labelsize='large')
-#
-# custom_ticks = [1e-4, 0.5e-3, 1e-3]  # Adjust as needed
-# custom_labels = [r'$10^{-4}$', r'$5\times10^{-4}$', r'$10^{-3}$']
-# # Apply settings to ax2
-# ax2.set_xticks(custom_ticks)
-# ax2.set_xticklabels(custom_labels)
-# ax2.set_ylabel(fr'$\theta$')
-# ax2.set_xlabel(fr'Strain')
-#
-# # Elliptical plot (bottom-left)
-# t = np.linspace(0, 2 * np.pi, 360)
-# Ex, Ey = A2lfx, A2lfy
-# E_x = np.real(Ex) * np.cos(t) - np.imag(Ex) * np.sin(t)
-# E_y = np.real(Ey) * np.cos(t) - np.imag(Ey) * np.sin(t)
-#
-#
-# ax3.plot(E_x, E_y, label='A2', color=dark[0])
-#
-# Ex, Ey = B1lfx, B1lfy
-# E_x = np.real(Ex) * np.cos(t) - np.imag(Ex) * np.sin(t)
-# E_y = np.real(Ey) * np.cos(t) - np.imag(Ey) * np.sin(t)
-#
-# ax3.plot(E_x, E_y, color=dark[1], label='B1')
-#
-# ax3.axhline(0, color='black', linewidth=0.5, linestyle='--')
-# ax3.axvline(0, color='black', linewidth=0.5, linestyle='--')
-#
-# # Set axis labels and equal aspect ratio for ax3
-# ax3.set_xlabel(r"$E_x$")
-# ax3.set_ylabel(r"$E_y$")
-# ax3.axis('equal')
-#
-#
-# ax4.plot(strain_vals, stoke_valsA2, color = dark[0])
-# ax4.plot(strain_vals, stoke_valsB1, color = dark[1])
-# ax4.set_ylabel(fr'$S_3$')
-# ax4.set_xlabel('Strain')
-# ax4.set_xticks(custom_ticks)
-# ax4.set_xticklabels(custom_labels)
-# # Add subplot labels
-# fig.text(0.08, 0.92, 'a', fontsize=16, fontweight='bold')  # Top left
-# fig.text(0.55, 0.92, 'b', fontsize=16, fontweight='bold')  # Top right
-# fig.text(0.08, 0.45, 'c', fontsize=16, fontweight='bold')  # Bottom left
-# fig.text(0.55, 0.45, 'd', fontsize=16, fontweight='bold')  # Bottom right (empty)
-#
-# # Adjust layout
-# fig.tight_layout()
-# plt.show()
-
 fig = plt.figure(figsize=(14,7))
 
-# Create subplots with GridSpec
-from matplotlib.gridspec import GridSpec
 
 gs = GridSpec(2, 3, height_ratios=[1.3, 1], width_ratios=[0.8, 0.8, 1])
 

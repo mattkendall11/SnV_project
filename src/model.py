@@ -1,9 +1,7 @@
 import numpy as np
 from scipy.linalg import eigh
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
 from typing import Tuple, Optional, List
-import logging
 
 
 @dataclass
@@ -14,15 +12,20 @@ class PhysicalConstants:
     GHz: float = 1e9  # 1 GHz in Hz
     lg: float = 815e9  # Spin-orbit coupling in ground state (Hz)
     lu: float = 2355e9  # Spin-orbit coupling in excited state (Hz)
-    x_g: float = 65e9 #Jahn teller coupling
+    x_g: float = 65e9 #Jahn teller coupling (Hz)
     y_g: float = 0  # Jahn-Teller coupling (ground state) (Hz)
-    x_u: float = 855e9 # Jahn-Teller coupling
+    x_u: float = 855e9 # Jahn-Teller coupling (Hz)
     y_u: float = 0  # Jahn-Teller coupling (excited state) (Hz)
     fg: float = 0.15 # quenching factor
     fu: float = 0.15 # quenching factor
+    ec:float = 1.6e-19 # elementary charge
+    ep0:float = 8.84e-12 #permitivity
+    c:float = 3e8 #speed of light
+    me: float = 9.11e-31
+    afact:float = np.sqrt(1.1366338470962457e-18)
 
 
-class QuantumHamiltonian:
+class Hamiltonian:
     """
     A class for calculating and analyzing quantum Hamiltonians with spin-orbit coupling,
     Jahn-Teller effect, Zeeman splitting, and strain effects.
@@ -36,14 +39,10 @@ class QuantumHamiltonian:
     def __init__(self):
         """Initialize the QuantumHamiltonian with physical constants."""
         self.constants = PhysicalConstants()
-        self.L = self.constants.muB / self.constants.hbar  # Orbital gyromagnetic ratio
-        self.S = 2 * self.constants.muB / self.constants.hbar  # Spin gyromagnetic ratio
-        self._setup_logging()
+        # self.L = self.constants.muB / self.constants.hbar  # Orbital gyromagnetic ratio
+        self.L =self.constants.ec/(2*self.constants.me)
+        self.S = 2 * self.L  # Spin gyromagnetic ratio
 
-    def _setup_logging(self):
-        """Set up logging configuration."""
-        logging.basicConfig(level=logging.INFO)
-        self.logger = logging.getLogger(__name__)
 
     @staticmethod
     def spin_orbit_hamiltonian(l: float) -> np.ndarray:
@@ -63,6 +62,9 @@ class QuantumHamiltonian:
                          [0, -i * l / 2, 0, 0]])
     @staticmethod
     def unpeterbed_hamiltonian():
+        '''
+        Returns identity of energy splitting
+        '''
         return 484*10**12 *np.eye(4)
 
     @staticmethod

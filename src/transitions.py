@@ -1,8 +1,10 @@
 import numpy as np
 from typing import Tuple
-from src.model import QuantumHamiltonian
+from src.model import Hamiltonian
+from src.model import PhysicalConstants as Pc
 
-class transitioncompute(QuantumHamiltonian):
+
+class transitioncompute(Hamiltonian):
     """
     A class for analyzing quantum transitions and field amplitudes, extending the QuantumHamiltonian class.
     Includes functionality for calculating transition energies, field amplitudes, and polarization analysis.
@@ -16,37 +18,40 @@ class transitioncompute(QuantumHamiltonian):
         super().__init__()
         self.B = B
         self.strain = strain
-        self.E, self.V = QuantumHamiltonian.get_energy_spectra(self, B=self.B, strain=self.strain)
+        self.E, self.V = Hamiltonian.get_energy_spectra(self, B=self.B, strain=self.strain)
 
         Px_orbital = np.array([[0,0,1,0],
                             [0,0,0,-1],
                             [1,0,0,0],
                             [0,-1,0,0]])
-        self.Px = np.kron(Px_orbital, np.identity(2))
+
+        self.Px = Pc.ec*Pc.afact*np.kron(Px_orbital, np.identity(2))
 
         Py_orbital = np.array([[0,0,0,-1],
                             [0,0,-1,0],
                             [0,-1,0,0],
                             [-1,0,0,0]])
-        self.Py = np.kron(Py_orbital, np.identity(2))
+
+        self.Py = Pc.ec*Pc.afact*np.kron(Py_orbital, np.identity(2))
 
         Pz_orbital = 2*np.array([[0,0,1,0],
                              [0,0,0,1],
                              [1,0,0,0],
                              [0,1,0,0]])
-        self.Pz = np.kron(Pz_orbital, np.identity(2))
+
+        self.Pz = Pc.ec*Pc.afact*np.kron(Pz_orbital, np.identity(2))
 
 
 
     def return_levels(self):
         '''
-        :return: energy levels
+        return: energy levels
         '''
         return self.E
+
     def return_vectors(self):
         '''
-
-        :return: eigenvectors
+        return: eigenvectors
         '''
         return self.V
 
@@ -83,18 +88,11 @@ class transitioncompute(QuantumHamiltonian):
         Returns:
             Tuple[complex, complex]: Transformed coordinates (Ax_lab, Ay_lab)
         """
+        M1 = np.array([[1, 0, 0], [0, 1, 0]])
 
+        M2 = np.array([[np.cos(theta), 0, np.sin(theta)],[0, 1, 0], [-np.sin(theta), 0, np.cos(theta)]])
 
-        M1 = np.array([[1, 0, 0],
-                       [0, 1, 0]])
-
-        M2 = np.array([[np.cos(theta), 0, np.sin(theta)],
-                       [0, 1, 0],
-                       [-np.sin(theta), 0, np.cos(theta)]])
-
-        M3 = np.array([[np.cos(phi), -np.sin(phi), 0],
-                       [np.sin(phi), np.cos(phi), 0],
-                       [0, 0, 1]])
+        M3 = np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 
         A = np.array([Ax, Ay, Az])
         result = M1 @ M2 @ M3 @ A
@@ -117,10 +115,8 @@ class transitioncompute(QuantumHamiltonian):
             Tuple[complex, complex]: Final field components (Ax_final, Ay_final)
         """
         # Ax_l, Ay_l =self.convert_lab_frame()
-        M1 = np.array([[1, 0],
-                       [0, 0]])
-        M2 = np.array([[np.cos(phi), np.sin(phi)],
-                       [np.sin(phi), -np.cos(phi)]])
+        M1 = np.array([[1, 0], [0, 0]])
+        M2 = np.array([[np.cos(phi), np.sin(phi)], [np.sin(phi), -np.cos(phi)]])
         A_l = np.array([Ax_l, Ay_l])
 
         result = M1 @ M2 @ A_l
@@ -154,7 +150,6 @@ class transitioncompute(QuantumHamiltonian):
     def get_magnitude_from_vector(self,) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculate magnitude from eigenvectors.
-
         Args:
             Ve (np.ndarray): Excited state eigenvector
             Vg (np.ndarray): Ground state eigenvector
@@ -165,6 +160,24 @@ class transitioncompute(QuantumHamiltonian):
         Ax, Ay, Az = self.return_field_amp(self.Ve, self.Vg)
         return self.scan_polarisation(Ax, Ay, Az)
 
+    def get_A1(self):
+        '''
+        returns A1 transition vector
+        '''
+        Ve0 = self.V[:, 4]
+        Vg0 = self.V[:, 0]
+
+        A1x, A1y, A1z = self.return_field_amp(Vg0, Ve0)
+
+
+        return [A1x, A1y, A1z]
+
+    def omega_A1(self):
+
+        Ee = self.return_levels()[4]
+        Eg = self.return_levels()[0]
+
+        return Ee-Eg
 
     def get_A2(self):
         '''
@@ -178,17 +191,13 @@ class transitioncompute(QuantumHamiltonian):
 
         return [A2x, A2y, A2z]
 
-    def get_A1(self):
-        '''
-        returns A1 transition vector
-        '''
-        Ve0 = self.V[:, 4]
-        Vg0 = self.V[:, 0]
+    def omega_A2(self):
 
-        A1x, A1y, A1z = self.return_field_amp(Vg0, Ve0)
+        Ee = self.return_levels()[4]
+        Eg = self.return_levels()[1]
 
+        return Ee-Eg
 
-        return [A1x, A1y, A1z]
 
     def get_B1(self):
         '''
@@ -283,6 +292,38 @@ class transitioncompute(QuantumHamiltonian):
         c = np.vdot([Ax1, Ay1], [Ax2, Ay2])
 
         return np.abs(c)
+
+    def A1_rate(self):
+
+        dipole = self.get_A1()
+        energy = self.omega_A1()
+        numerator = ((energy)**3)*(np.linalg.norm(dipole)**2)*4*2.417*1/137
+        denominator = 3*(Pc.c**2)*(Pc.ec**2)
+        return numerator/denominator
+
+    def A2_rate(self):
+
+        dipole = self.get_A2()
+        energy = self.omega_A2()
+        numerator = ((energy)**3)*(np.linalg.norm(dipole)**2)*4*2.417*1/137
+        denominator = 3*(Pc.c**2)*(Pc.ec**2)
+        return numerator/denominator
+
+    def A1_strength(self):
+        dipole = np.abs(self.get_A1())
+        return np.linalg.norm(dipole)
+
+    def A2_strength(self):
+        dipole = np.abs(self.get_A2())
+        return np.linalg.norm(dipole)
+
+    def B1_strength(self):
+        dipole = np.abs(self.get_B1())
+        return np.linalg.norm(dipole)
+
+    def B2_strength(self):
+        dipole = np.abs(self.get_B2())
+        return np.linalg.norm(dipole)
 
 
 
