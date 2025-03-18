@@ -211,6 +211,13 @@ class transitioncompute(Hamiltonian):
 
         return [B1x, B1y, B1z]
 
+    def omega_B1(self):
+
+        Ee = self.return_levels()[5]
+        Eg = self.return_levels()[0]
+
+        return Ee-Eg
+
     def get_B2(self):
         '''
         returns B1 transition vector
@@ -222,6 +229,13 @@ class transitioncompute(Hamiltonian):
 
 
         return [B2x, B2y, B2z]
+
+    def omega_B2(self):
+
+        Ee = self.return_levels()[5]
+        Eg = self.return_levels()[1]
+
+        return Ee-Eg
 
     def A1B2_overlap(self):
 
@@ -305,6 +319,22 @@ class transitioncompute(Hamiltonian):
 
         dipole = self.get_A2()
         energy = self.omega_A2()
+        numerator = ((energy)**3)*(np.linalg.norm(dipole)**2)*4*2.417*1/137
+        denominator = 3*(Pc.c**2)*(Pc.ec**2)
+        return numerator/denominator
+
+    def B1_rate(self):
+
+        dipole = self.get_B1()
+        energy = self.omega_B1()
+        numerator = ((energy)**3)*(np.linalg.norm(dipole)**2)*4*2.417*1/137
+        denominator = 3*(Pc.c**2)*(Pc.ec**2)
+        return numerator/denominator
+
+    def B2_rate(self):
+
+        dipole = self.get_B2()
+        energy = self.omega_B2()
         numerator = ((energy)**3)*(np.linalg.norm(dipole)**2)*4*2.417*1/137
         denominator = 3*(Pc.c**2)*(Pc.ec**2)
         return numerator/denominator
