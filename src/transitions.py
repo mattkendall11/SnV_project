@@ -355,19 +355,19 @@ class transitioncompute(Hamiltonian):
         dipole = np.abs(self.get_B2())
         return np.linalg.norm(dipole)
 
+    def A1_branch(self):
+        br = self.A1_rate()/(self.A2_rate()+self.A1_rate())
+        return br
 
+    def A2_branch(self):
+        br = self.A2_rate()/(self.A2_rate()+self.A1_rate())
+        return br
 
+    def B1_branch(self):
+        br = self.B1_rate()/(self.B2_rate()+self.B1_rate())
+        return br
 
-
-
-
-
-
-
-
-
-
-
-
-
+    def B2_branch(self):
+        br = self.B2_rate()/(self.B2_rate()+self.B1_rate())
+        return br
 

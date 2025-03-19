@@ -2,7 +2,7 @@ import numpy as np
 from typing import Tuple, List, Callable
 import random
 import warnings
-
+from src.transitions import transitioncompute
 class GeneticOptimizer:
     def __init__(self,
                  fitness_func: Callable,
@@ -189,3 +189,42 @@ def optimize_function(f, otype = 'Genetic'):
     print(f"Final dot product value: {best_fitness:.8f}")
 
     return best_solution, best_fitness
+
+
+
+def fA1A2(b,theta, phi, ex, exy):
+    Bx = b * np.sin(theta) * np.cos(phi)
+    By = b * np.sin(theta) * np.sin(phi)
+    Bz = b * np.cos(theta)
+    B = [Bx, By, Bz]
+
+    model = transitioncompute(B, strain=[ex, exy])
+
+    v1 = model.get_A1() / np.linalg.norm(model.get_A1())
+    Ax2, Ay2 = model.convert_lab_frame(*v1)
+
+    v2 = model.get_A2() / np.linalg.norm(model.get_A2())
+
+    Ax, Ay = model.convert_lab_frame(*v2)
+
+    return np.abs(np.vdot([Ax2, Ay2], [Ax, Ay]))
+
+
+
+def fA1A2_nostrain(b,theta,phi):
+
+    Bx = b * np.sin(theta) * np.cos(phi)
+    By = b * np.sin(theta) * np.sin(phi)
+    Bz = b * np.cos(theta)
+    B = [Bx, By, Bz]
+
+    model = transitioncompute(B)
+
+    v1 = model.get_A1() / np.linalg.norm(model.get_A1())
+    Ax2, Ay2 = model.convert_lab_frame(*v1)
+
+    v2 = model.get_A2() / np.linalg.norm(model.get_A2())
+
+    Ax, Ay = model.convert_lab_frame(*v2)
+
+    return np.abs(np.vdot([Ax2, Ay2], [Ax, Ay]))
