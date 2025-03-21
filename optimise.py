@@ -52,7 +52,7 @@ def f_rad_strain(b,theta,phi, Ex ,exy):
     v4 = model.get_B2()/np.linalg.norm(model.get_B2())
 
     Bx2, By2 = model.convert_lab_frame(*v4)
-    return np.abs(np.vdot([Ax2, Ay2], [Bx2, By2])) + model.A1_branch()+ model.B1_branch()
+    return np.abs(np.vdot([Ax2, Ay2], [Bx, By])) + model.A1_branch()+ model.B2_branch()
 
 def f_ellptical(b,theta, phi, ex, exy):
     Bx = b * np.sin(theta) * np.cos(phi)
