@@ -6,7 +6,9 @@ from typing import Tuple, Optional, List
 
 @dataclass
 class PhysicalConstants:
-    """Physical constants used in calculations."""
+    """
+    Physical constants
+    """
     muB: float = 9.2740100783e-24  # Bohr magneton in J/T
     hbar: float = 1.054571817e-34  # Reduced Planck's constant in J*s
     GHz: float = 1e9  # 1 GHz in Hz
@@ -22,8 +24,7 @@ class PhysicalConstants:
     ep0:float = 8.84e-12 #permitivity
     c:float = 3e8 #speed of light
     me: float = 9.11e-31
-    afact:float = np.sqrt(1.1366338470962457e-18)
-
+    afact = 55e-12
 
 class Hamiltonian:
     """
@@ -60,6 +61,7 @@ class Hamiltonian:
                          [0, 0, 0, l * i / 2],
                          [l * i / 2, 0, 0, 0],
                          [0, -i * l / 2, 0, 0]])
+
     @staticmethod
     def unpeterbed_hamiltonian():
         '''
@@ -152,7 +154,7 @@ class Hamiltonian:
         Returns:
             Eigenvalues and eigenvectors of the ground and excited Hamiltonian
         """
-        # Default strain parameters
+        # Strain parameters
         ex, exy = strain[0], strain[1]
 
         # Construct full Hamiltonian

@@ -1,8 +1,5 @@
 import numpy as np
 from src.transitions import transitioncompute
-from typing import Tuple, List, Callable
-import random
-import warnings
 from src.optimizers import optimize_function
 from scipy.optimize import minimize, dual_annealing
 
@@ -52,7 +49,7 @@ def f_rad_strain(b,theta,phi, Ex ,exy):
     v4 = model.get_B2()/np.linalg.norm(model.get_B2())
 
     Bx2, By2 = model.convert_lab_frame(*v4)
-    return np.abs(np.vdot([Ax2, Ay2], [Bx, By])) + model.A1_branch()+ model.B2_branch()
+    return model.A1_branch()- model.A2_branch()
 
 def f_ellptical(b,theta, phi, ex, exy):
     Bx = b * np.sin(theta) * np.cos(phi)

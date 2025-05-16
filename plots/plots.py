@@ -54,7 +54,7 @@ B1ang, B1mag = model.scan_polarisation(B1)
 B2ang, B2mag = model.scan_polarisation(B2)
 # plot_2polar(A2ang, A2mag, B1ang, B1mag,labels=['A2', 'B1'])
 #
-A2lfx, A2lfy = model.convert_lab_frame(*A2)
+A2lfx, A2lfy = model.convert_lab_frame(*A1)
 B1lfx, B1lfy = model.convert_lab_frame(*B1)
 
 
@@ -84,7 +84,7 @@ for spine in ax3.spines.values():
 for spine in ax4.spines.values():
     spine.set_visible(False)
 # Polar plot (top row, spanning all columns)
-ax1.plot(A2ang, A2mag, color=dark[0], label='A2')
+ax1.plot(A2ang, A2mag, color=dark[0], label='A1')
 ax1.plot(B1ang, B1mag, color=dark[1], label='B1')
 
 # Color plot (bottom-left)
@@ -106,7 +106,7 @@ t = np.linspace(0, 2 * np.pi, 360)
 Ex, Ey = A2lfx, A2lfy
 E_x = np.real(Ex) * np.cos(t) - np.imag(Ex) * np.sin(t)
 E_y = np.real(Ey) * np.cos(t) - np.imag(Ey) * np.sin(t)
-ax3.plot(E_x, E_y, label='A2', color=dark[0])
+ax3.plot(E_x, E_y, label='A1', color=dark[0])
 Ex, Ey = B1lfx, B1lfy
 E_x = np.real(Ex) * np.cos(t) - np.imag(Ex) * np.sin(t)
 E_y = np.real(Ey) * np.cos(t) - np.imag(Ey) * np.sin(t)
